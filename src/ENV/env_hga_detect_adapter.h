@@ -6,7 +6,7 @@
 #ifndef HGA_DETECT_ADAPTER_H
 #define HGA_DETECT_ADAPTER_H
 
-#include "../ENV/env_graphics_types.h"
+#include "env_graphics_types.h"
 
 /**
 * If an MDA card is detected, however, you can also distinguish between an MDA card and the Hercules cards.

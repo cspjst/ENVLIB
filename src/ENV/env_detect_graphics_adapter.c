@@ -10,10 +10,10 @@
  */
 #include "env_detect_graphics_adapter.h"
 
-#include "../HGA/hga_detect_adapter.h"
-#include "../CGA/cga_detect_adapter.h"
-#include "../EGA/ega_detect_adapter.h"
-#include "../VGA/vga_detect_adapter.h"
+#include "env_hga_detect_adapter.h"
+#include "env_cga_detect_adapter.h"
+#include "env_ega_detect_adapter.h"
+#include "env_vga_detect_adapter.h"
 #include "env_graphics_constants.h"
 
 unsigned char env_detect_monochrome_adapter() {

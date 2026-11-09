@@ -6,7 +6,7 @@
 #ifndef CGA_DETECT_ADAPTER_H
 #define CGA_DETECT_ADAPTER_H
 
-#include "../ENV/env_graphics_types.h"
+#include "env_graphics_types.h"
 
 env_adapter_t cga_detect_adapter();
 

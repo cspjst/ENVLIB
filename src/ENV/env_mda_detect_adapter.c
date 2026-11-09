@@ -1,9 +1,7 @@
-#include "mda_detect_adapter.h"
+#include "env_mda_detect_adapter.h"
 
-#include "../ENV/env_detect_crtc.h"
-#include "../ENV/env_graphics_constants.h"
-
-#include "mda_constants.h"
+#include "env_detect_crtc.h"
+#include "env_graphics_constants.h"
 
 env_adapter_t mda_detect_adapter() {
     env_adapter_t adapter = ENV_VIDEO_ADAPTER_UKNOWN;

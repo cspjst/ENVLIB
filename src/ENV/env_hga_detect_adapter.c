@@ -3,12 +3,10 @@
  * @copyright   2024,2026 Jeremy Simon Thornton
  *
  */
-#include "hga_detect_adapter.h"
+#include "env_hga_detect_adapter.h"
 
-#include "../ENV/env_detect_crtc.h"
-#include "../ENV/env_graphics_constants.h"
-
-#include "hga_constants.h"
+#include "env_detect_crtc.h"
+#include "env_graphics_constants.h"
 
 env_adapter_t hga_detect_adapter() {
         unsigned char adapter = ENV_VIDEO_ADAPTER_UKNOWN;

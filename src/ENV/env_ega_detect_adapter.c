@@ -3,10 +3,10 @@
  * @copyright   2024, 2026 Jeremy Simon Thornton
  *
  */
-#include "ega_detect_adapter.h"
+#include "env_ega_detect_adapter.h"
 
-#include "../ENV/env_graphics_constants.h"
-#include "../../doslib/bioslib/src/BIOS/bios_video_services.h"
+#include "env_graphics_constants.h"
+#include "bios_video_services.h"
 
 /**
 * @brief detect EGA by attempting to use an EGA specific Video Subsystem Configuration (EGA/VGA) function

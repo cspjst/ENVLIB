@@ -6,20 +6,12 @@
 #ifndef DOS_ENVIRONMENT_CONSTANTS_H
 #define DOS_ENVIRONMENT_CONSTANTS_H
 
-#include "../../doslib/src/DOS/dos_memory_types.h"
-
 #define ROM_BIOS_SEG_BEGIN   0xFE00
 #define ROM_BIOS_OFF_BEGIN   0x0000
 #define ROM_BIOS_SEG_END     0xF000
 #define ROM_BIOS_OFF_END     0xFFFF
 
 #define ROM_BIOS_MODEL_BYTE  0xFFFE  // IBM hardware using the ROM BIOS Model Byte (2 bytes before the end of the ROM segment)
-
-extern const dos_mem_block_t MEM_BLOCK_IVT;
-extern const dos_mem_block_t MEM_BLOCK_BDA;
-extern const dos_mem_block_t MEM_BLOCK_VIDEO_MONO_PAGE_0;
-extern const dos_mem_block_t MEM_BLOCK_VIDEO_COLOUR_PAGE_0;
-extern const dos_mem_block_t MEM_BLOCK_ROM_BIOS;
 
 #define SEARCH_SIZE_DOSBOX  128
 extern const char SEARCH_DOSBOX[6];
