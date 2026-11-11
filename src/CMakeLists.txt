@@ -41,6 +41,11 @@ configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/../README.md
     @ONLY
 )
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/ENV/env_version.h.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/ENV/env_version.h
+  @ONLY
+)
 
 # Build mode selection
 # set(MAKE_LIB ON)
