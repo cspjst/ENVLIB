@@ -7,7 +7,7 @@
 #include "env_graphics_constants.h"
 #include "env_detect_crtc.h"
 
-env_adapter_t env_cga_detect_adapter() {
+int env_cga_detect_adapter() {
     if (env_detect_crtc(crtc_port_CGA)) {
         return ENV_VIDEO_ADAPTER_CGA;
     }

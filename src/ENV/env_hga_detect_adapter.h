@@ -6,8 +6,6 @@
 #ifndef HGA_DETECT_ADAPTER_H
 #define HGA_DETECT_ADAPTER_H
 
-#include "env_graphics_types.h"
-
 /**
 * If an MDA card is detected, however, you can also distinguish between an MDA card and the Hercules cards.
 * To do this, the vertical sync bit is sampled and then for a certain time interval, is continually and frequently re-sampled.
@@ -34,6 +32,6 @@
 * 4 Hercules InColor
 * 5 Hercules Clone
 */
-env_adapter_t hga_detect_adapter();
+int hga_detect_adapter();
 
 #endif

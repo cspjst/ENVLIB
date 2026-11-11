@@ -5,8 +5,7 @@
 */
 #include "env_detect_crtc.h"
 
-unsigned char env_detect_crtc(unsigned short port_number) {
-    unsigned char found = 0;
+int env_detect_crtc(unsigned short port_number) {
     __asm {
         .8086
         pushf
@@ -28,11 +27,10 @@ WAIT:   loop    WAIT                ; wait for 6845 to respond
         out     dx, al              ; restore old value
 
         cmp     ah, 66h             ; test whether 6845 responded with new value?
-        jne     EXIT                ; exit it did not, leaving found as 0
-
-        mov     found, 1
+        mov     ax, 0
+        jne     EXIT                ; old value return 0 in AX
+        mov     ax, 1               ; new value return 1 in AX
 
 EXIT:   popf
     }
-    return found;
 }

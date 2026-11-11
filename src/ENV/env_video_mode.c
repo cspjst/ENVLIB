@@ -1,6 +1,6 @@
 #include "env_video_mode.h"
 
-#include "../../doslib/bioslib/src/BIOS/bios_video_services.h"
+#include "../include/BIOS/bios_video_services.h"
 
 bios_video_mode_t env_set_video_mode(bios_video_mode_t mode) {
     bios_video_state_t old;

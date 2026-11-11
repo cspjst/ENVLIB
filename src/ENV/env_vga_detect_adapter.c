@@ -14,7 +14,7 @@
 * on return: AL = 12h if a valid value was passed in AL ie VGA+
 *
 */
-env_adapter_t vga_detect_adapter() {
+int vga_detect_adapter() {
     return (bios_video_subsystem_configuration(BIOS_CPU_ACCESS_TO_VIDEO_RAM, 0, 0) == 0x12)
         ? ENV_VIDEO_ADAPTER_VGA
         : ENV_VIDEO_ADAPTER_UKNOWN;

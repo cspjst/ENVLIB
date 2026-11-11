@@ -13,6 +13,6 @@
 * Wait an arbitrary period of time then check if the value is retained?
 * In which case the CRTC is _probably_ detected
 */
-unsigned char env_detect_crtc(unsigned short port_number);
+int env_detect_crtc(unsigned short port_number);
 
 #endif

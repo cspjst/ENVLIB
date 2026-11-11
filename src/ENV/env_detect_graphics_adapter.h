@@ -7,13 +7,11 @@
  *  @copyright Jeremy Thornton, 2024. All right reserved.
  *
  */
-#ifndef HW_DETECT_GRAPHICS_ADAPTER_H
-#define HW_DETECT_GRAPHICS_ADAPTER_H
+#ifndef ENV_DETECT_GRAPHICS_ADAPTER_H
+#define ENV_DETECT_GRAPHICS_ADAPTER_H
 
-#include "env_graphics_types.h"
+int env_detect_monochrome_adapter();
 
-env_adapter_t env_detect_monochrome_adapter();
-
-env_adapter_t env_detect_colour_adapter();
+int env_detect_colour_adapter();
 
 #endif
