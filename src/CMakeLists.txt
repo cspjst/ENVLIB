@@ -48,7 +48,7 @@ configure_file(
 )
 
 # Build mode selection
-# set(MAKE_LIB ON)
+set(MAKE_LIB ON)
 
 if(MAKE_LIB)
     # DOS.LIB from library code; TEST.exe gets DOS code only via the lib
