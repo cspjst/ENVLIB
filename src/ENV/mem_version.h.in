@@ -1,0 +1,31 @@
+#ifndef MEM_VERSION_H
+#define MEM_VERSION_H
+
+#define MEM_VERSION_MAJOR  @PROJECT_VERSION_MAJOR@
+#define MEM_VERSION_MINOR  @PROJECT_VERSION_MINOR@
+#define MEM_VERSION_PATCH  @PROJECT_VERSION_PATCH@
+
+/**
+ * single comparable value: 0xMMmm (major high byte, minor low byte)
+ * matches the way DOS reports its own version (major in AH, minor in AL)
+ */
+#define MEM_VERSION        ((MEM_VERSION_MAJOR << 8) | MEM_VERSION_MINOR)
+
+#define MEM_VERSION_STRING "@PROJECT_VERSION@"
+
+/**
+* @brief   Version of MEM.LIB as built.
+*
+* Packed as 0xMMmm: major in the high byte, minor in the low byte.
+* Compare with the MEM_VERSION macro to detect a header/library mismatch.
+*/
+unsigned int mem_version();
+
+/**
+* @brief   Full version string of MEM.LIB as built, e.g. "1.2.3".
+*
+* Includes the patch number, which mem_version() omits.
+*/
+const char* mem_version_string();
+
+#endif
