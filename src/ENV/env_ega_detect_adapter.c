@@ -6,7 +6,7 @@
 #include "env_ega_detect_adapter.h"
 
 #include "env_graphics_constants.h"
-#include "bios_video_services.h"
+#include "../include/BIOS/bios_video_services.h"
 
 /**
 * @brief detect EGA by attempting to use an EGA specific Video Subsystem Configuration (EGA/VGA) function

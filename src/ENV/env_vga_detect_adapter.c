@@ -1,7 +1,7 @@
 #include "env_vga_detect_adapter.h"
 
 #include "env_graphics_constants.h"
-#include "bios_video_services.h"
+#include "../include/BIOS/bios_video_services.h"
 
 /**
 * @brief detect VGA by attempting to use a VGA specific Video Subsystem Configuration (EGA/VGA) function

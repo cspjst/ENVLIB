@@ -13,6 +13,8 @@
 
 #define ENV_VERSION_STRING "@PROJECT_VERSION@"
 
+#define ENV_MIN_BIOS_VERSION 0x0009
+
 /**
 * @brief   Version of ENV.LIB as built.
 *

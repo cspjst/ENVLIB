@@ -1,0 +1,150 @@
+#include "test_env.h"
+
+#include <stdio.h>
+#include <assert.h>
+
+#include "../ENV/env_video_mode.h"
+#include "../ENV/env_detect_crtc.h"
+
+#include "../include/BIOS/bios_version.h"
+#include "../include/BIOS/bios_keyboard_services.h"
+
+#define CRTC_MONO   0x3B4
+#define CRTC_COLOUR 0x3D4
+#define REPEATS     8
+
+/* BIOS equipment word 0040:0010, bits 4-5 = initial video mode */
+#define EQUIP_VIDEO_MASK  0x30
+#define EQUIP_VIDEO_MONO  0x30
+
+static void wait_key(const char* msg) {
+    bios_key_t key;
+    printf("%s", msg);
+    bios_wait_for_keystroke_and_read(&key);
+    printf("\n");
+}
+
+static int repeatable(unsigned short port) {
+    int first = (env_detect_crtc(port) != 0);
+    int i;
+    for (i = 1; i < REPEATS; ++i) {
+        if ((env_detect_crtc(port) != 0) != first) return 0;
+    }
+    return 1;
+}
+
+void test_env_detect_crtc() {
+    unsigned short equip = *(unsigned short far*)0x00400010L;
+    int bios_mono = ((equip & EQUIP_VIDEO_MASK) == EQUIP_VIDEO_MONO);
+    int mono;
+    int colour;
+
+    printf("Testing ENV CRTC detection...\n");
+    printf("BIOS equipment word: %04Xh -> %s display\n", equip, bios_mono ? "mono" : "colour");
+
+    mono   = (env_detect_crtc(CRTC_MONO) != 0);
+    colour = (env_detect_crtc(CRTC_COLOUR) != 0);
+    printf("CRTC at %03Xh (mono):   %s\n", CRTC_MONO,   mono   ? "FOUND" : "none");
+    printf("CRTC at %03Xh (colour): %s\n", CRTC_COLOUR, colour ? "FOUND" : "none");
+
+    /* the adapter the BIOS booted on must have a CRTC */
+    if (bios_mono) assert(mono);
+    else           assert(colour);
+    printf("Active adapter's CRTC detected: PASS\n");
+
+    /* same answer every time */
+    assert(repeatable(CRTC_MONO));
+    assert(repeatable(CRTC_COLOUR));
+    printf("Repeatable over %d probes: PASS\n", REPEATS);
+
+    printf("Expected:\n");
+    printf("  MDA/HGA:        3B4h only\n");
+    printf("  CGA:            3D4h only\n");
+    printf("  EGA/VGA:        the active one (mono or colour)\n");
+    printf("  Dual head:      both\n");
+
+    /* cursor must be untouched by probing: ABC and DEF should be contiguous */
+    printf("Cursor check: ABC");
+    env_detect_crtc(CRTC_MONO);
+    env_detect_crtc(CRTC_COLOUR);
+    printf("DEF\n");
+    printf("Line above must read 'Cursor check: ABCDEF' with no gap or jump\n");
+    wait_key("Press a key...");
+
+    printf("ENV CRTC detection tests passed\n\n");
+}
+
+/* standard BIOS modes worth trying (PCjr/Tandy 08h-0Ah left out) */
+static const unsigned char candidates[] = {
+    0x00, 0x01, 0x02, 0x03,     /* CGA text            */
+    0x04, 0x05, 0x06,           /* CGA graphics        */
+    0x07,                       /* MDA / Hercules text */
+    0x0D, 0x0E, 0x0F, 0x10,     /* EGA graphics        */
+    0x11, 0x12, 0x13            /* VGA / MCGA graphics */
+};
+#define NCANDIDATES (sizeof(candidates) / sizeof(candidates[0]))
+
+void test_env_video_mode() {
+    unsigned char accepted[NCANDIDATES];
+    unsigned char rejected[NCANDIDATES];
+    int naccepted = 0;
+    int nrejected = 0;
+    int i;
+
+    bios_video_mode_t original = env_get_video_mode();
+    int mono = (original == MDA_MODE);
+
+    printf("Testing ENV video mode get/set...\n");
+    printf("Original mode: %02Xh %s\n", (unsigned)original, bios_video_mode_names[original]);
+    printf("Expected accepted modes:\n");
+    printf("  MDA/HGA: 07h\n");
+    printf("  CGA:     00h-06h\n");
+    printf("  EGA:     00h-06h 0Dh-10h\n");
+    printf("  VGA:     00h-06h 0Dh-13h\n");
+    if (mono) printf("Mono display active: only mode 07h will be tried.\n");
+    else      printf("Colour display active: mode 07h will be skipped.\n");
+    wait_key("Press a key to start...");
+
+    for (i = 0; i < NCANDIDATES; ++i) {
+        bios_video_mode_t mode = (bios_video_mode_t)candidates[i];
+        bios_video_mode_t before;
+        bios_video_mode_t prev;
+        bios_video_mode_t now;
+
+        /* never cross mono <-> colour: the other card may not exist */
+        if (mono != (mode == MDA_MODE)) continue;
+
+        before = env_get_video_mode();
+        prev = env_set_video_mode(mode);
+        assert(prev == before);             /* set returns the previous mode */
+        now = env_get_video_mode();
+
+        if (now == mode) {
+            accepted[naccepted++] = (unsigned char)mode;
+            printf("Mode %02Xh %s\n", (unsigned)mode, bios_video_mode_names[mode]);
+            printf("ACCEPTED - check the display looks right\n");
+        } else {
+            rejected[nrejected++] = (unsigned char)mode;
+            printf("Mode %02Xh requested, still %02Xh\n", (unsigned)mode, (unsigned)now);
+            printf("REJECTED by BIOS\n");
+        }
+        wait_key("Press a key...");
+    }
+
+    env_set_video_mode(original);
+    assert(env_get_video_mode() == original);
+
+    printf("\nRestored mode %02Xh %s\n", (unsigned)original, bios_video_mode_names[original]);
+    printf("Accepted:");
+    for (i = 0; i < naccepted; ++i) printf(" %02Xh", accepted[i]);
+    printf("\nRejected:");
+    for (i = 0; i < nrejected; ++i) printf(" %02Xh", rejected[i]);
+    printf("\nCompare with the expected list for this adapter.\n");
+    printf("ENV video mode tests passed\n\n");
+}
+
+void test_env() {
+    printf("Test ENVLIB...\n");
+    assert(bios_version() == BIOS_VERSION);
+    test_env_video_mode();
+}

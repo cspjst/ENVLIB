@@ -1,7 +1,6 @@
 /**
 * @author      Jeremy Simon Thornton
 * @copyright   2024, 2026 Jeremy Simon Thornton
-*
 */
 #include "env_detect_crtc.h"
 

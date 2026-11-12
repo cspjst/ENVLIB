@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Toolchain (DOS / I86 / wcl) comes from cmk.sh -D flags.
-project(DOSLIB VERSION 0.0.2 LANGUAGES C)
+project(ENVLIB VERSION 0.0.2 LANGUAGES C)
 
 # Compiler options
 # Reference: https://users.pja.edu.pl/~jms/qnx/help/watcom/compiler-tools/cpopts.html
@@ -22,9 +22,14 @@ add_compile_options(
 #   -e<n>   stop after n errors
 #   -fpi87  assume 8087 present (only if every target XT has one)
 
+# Dependencies
+# BIOSLIB (vendored copy: include/BIOS/*.h, lib/BIOS.lib)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(BIOS_LIB ${CMAKE_CURRENT_SOURCE_DIR}/lib/BIOS.lib)
+
 # Sources
 # Library code
-file(GLOB DOS_SOURCES
+file(GLOB ENV_SOURCES
     CONFIGURE_DEPENDS
     ENV/*.c
 )
@@ -51,12 +56,13 @@ configure_file(
 set(MAKE_LIB ON)
 
 if(MAKE_LIB)
-    # DOS.LIB from library code; TEST.exe gets DOS code only via the lib
-    add_library(DOSLIB STATIC ${DOS_SOURCES})
-    set_target_properties(DOSLIB PROPERTIES OUTPUT_NAME DOS)
+    # ENV.LIB from library code; TEST.exe gets ENV code only via the lib
+    add_library(ENVLIB STATIC ${ENV_SOURCES})
+    set_target_properties(ENVLIB PROPERTIES OUTPUT_NAME ENV)
     add_executable(TEST ${TEST_SOURCES})
-    target_link_libraries(TEST PRIVATE DOSLIB)
+    target_link_libraries(TEST PRIVATE ENVLIB ${BIOS_LIB})
 else()
     # Everything compiled straight into TEST.exe
-    add_executable(TEST ${TEST_SOURCES} ${DOS_SOURCES})
+    add_executable(TEST ${TEST_SOURCES} ${ENV_SOURCES})
+    target_link_libraries(TEST PRIVATE ENVLIB ${BIOS_LIB})
 endif()

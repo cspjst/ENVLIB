@@ -1,7 +1,7 @@
 /**
-* @author      Jeremy Simon Thornton
-* @copyright   2024, 2026 Jeremy Simon Thornton
-*
+* @author   Jeremy Simon Thornton
+* @copyright    2026 Jeremy Simon Thornton
+* @brief    Probe an I/O address for a 6845 CRT controller.
 */
 #ifndef ENV_DETECT_CRTC_H
 #define ENV_DETECT_CRTC_H
