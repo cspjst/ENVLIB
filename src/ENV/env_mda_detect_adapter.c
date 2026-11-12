@@ -5,7 +5,7 @@
 
 int mda_detect_adapter() {
     int adapter = ENV_VIDEO_ADAPTER_UKNOWN;
-    if (env_detect_crtc(crtc_port_MDA)) {
+    if (env_detect_crtc(ENV_CRTC_PORT_MDA)) {
         __asm {
             .8086
             push    ds

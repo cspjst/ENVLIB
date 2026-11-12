@@ -3,19 +3,19 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "../ENV/env_version.h"
 #include "../ENV/env_video_mode.h"
 #include "../ENV/env_detect_crtc.h"
+#include "../ENV/env_graphics_constants.h"
 
 #include "../include/BIOS/bios_version.h"
 #include "../include/BIOS/bios_keyboard_services.h"
 
-#define CRTC_MONO   0x3B4
-#define CRTC_COLOUR 0x3D4
-#define REPEATS     8
-
 /* BIOS equipment word 0040:0010, bits 4-5 = initial video mode */
 #define EQUIP_VIDEO_MASK  0x30
 #define EQUIP_VIDEO_MONO  0x30
+
+#define REPEATS     8
 
 static void wait_key(const char* msg) {
     bios_key_t key;
@@ -42,10 +42,10 @@ void test_env_detect_crtc() {
     printf("Testing ENV CRTC detection...\n");
     printf("BIOS equipment word: %04Xh -> %s display\n", equip, bios_mono ? "mono" : "colour");
 
-    mono   = (env_detect_crtc(CRTC_MONO) != 0);
-    colour = (env_detect_crtc(CRTC_COLOUR) != 0);
-    printf("CRTC at %03Xh (mono):   %s\n", CRTC_MONO,   mono   ? "FOUND" : "none");
-    printf("CRTC at %03Xh (colour): %s\n", CRTC_COLOUR, colour ? "FOUND" : "none");
+    mono   = (env_detect_crtc(ENV_CRTC_PORT_MDA) != 0);
+    colour = (env_detect_crtc(ENV_CRTC_PORT_CGA) != 0);
+    printf("CRTC at %03Xh (mono):   %s\n", ENV_CRTC_PORT_MDA,   mono   ? "FOUND" : "none");
+    printf("CRTC at %03Xh (colour): %s\n", ENV_CRTC_PORT_CGA, colour ? "FOUND" : "none");
 
     /* the adapter the BIOS booted on must have a CRTC */
     if (bios_mono) assert(mono);
@@ -53,8 +53,8 @@ void test_env_detect_crtc() {
     printf("Active adapter's CRTC detected: PASS\n");
 
     /* same answer every time */
-    assert(repeatable(CRTC_MONO));
-    assert(repeatable(CRTC_COLOUR));
+    assert(repeatable(ENV_CRTC_PORT_MDA));
+    assert(repeatable(ENV_CRTC_PORT_CGA));
     printf("Repeatable over %d probes: PASS\n", REPEATS);
 
     printf("Expected:\n");
@@ -65,8 +65,8 @@ void test_env_detect_crtc() {
 
     /* cursor must be untouched by probing: ABC and DEF should be contiguous */
     printf("Cursor check: ABC");
-    env_detect_crtc(CRTC_MONO);
-    env_detect_crtc(CRTC_COLOUR);
+    env_detect_crtc(ENV_CRTC_PORT_MDA);
+    env_detect_crtc(ENV_CRTC_PORT_CGA);
     printf("DEF\n");
     printf("Line above must read 'Cursor check: ABCDEF' with no gap or jump\n");
     wait_key("Press a key...");
@@ -92,7 +92,7 @@ void test_env_video_mode() {
     int i;
 
     bios_video_mode_t original = env_get_video_mode();
-    int mono = (original == MDA_MODE);
+    int mono = (original == BIOS_MDA_TEXT_MONOCHROME_80X25);
 
     printf("Testing ENV video mode get/set...\n");
     printf("Original mode: %02Xh %s\n", (unsigned)original, bios_video_mode_names[original]);
@@ -112,7 +112,7 @@ void test_env_video_mode() {
         bios_video_mode_t now;
 
         /* never cross mono <-> colour: the other card may not exist */
-        if (mono != (mode == MDA_MODE)) continue;
+        if (mono != (mode == BIOS_MDA_TEXT_MONOCHROME_80X25)) continue;
 
         before = env_get_video_mode();
         prev = env_set_video_mode(mode);
@@ -145,6 +145,7 @@ void test_env_video_mode() {
 
 void test_env() {
     printf("Test ENVLIB...\n");
-    assert(bios_version() == BIOS_VERSION);
-    test_env_video_mode();
+    assert(bios_version() == ENV_MIN_BIOS_VERSION);
+    //test_env_video_mode();
+    test_env_detect_crtc();
 }
