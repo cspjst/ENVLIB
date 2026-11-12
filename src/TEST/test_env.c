@@ -6,7 +6,7 @@
 #include "../ENV/env_version.h"
 #include "../ENV/env_video_mode.h"
 #include "../ENV/env_detect_crtc.h"
-#include "../ENV/env_graphics_constants.h"
+#include "../ENV/env_graphics_types.h"
 
 #include "../include/BIOS/bios_version.h"
 #include "../include/BIOS/bios_keyboard_services.h"

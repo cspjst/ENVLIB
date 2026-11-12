@@ -6,6 +6,8 @@
 #ifndef ENV_DETECT_CRTC_H
 #define ENV_DETECT_CRTC_H
 
+#include "env_graphics_types.h"
+
 /**
 * @brief Detects whether or not a given I/O address is that of a 6845 CRT Controller
 * @details The Cursor Location Low register of the alleged CRTC is written with an arbitrary value
@@ -13,6 +15,6 @@
 * Wait an arbitrary period of time then check if the value is retained?
 * In which case the CRTC is _probably_ detected
 */
-int env_detect_crtc(unsigned short port_number);
+int env_detect_crtc(env_crtc_port_t port_number);
 
 #endif

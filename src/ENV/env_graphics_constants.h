@@ -30,6 +30,9 @@
 #define MDA_CRTC_STATUS_PORT        3BAh
 #define CGA_CRTC_STATUS_PORT        3D4h
 
+/**
+ * __asm constants
+ */
 #define ENV_VIDEO_ADAPTER_UKNOWN        0
 #define ENV_VIDEO_ADAPTER_MDA           1
 #define ENV_VIDEO_ADAPTER_HGA           2
@@ -41,15 +44,6 @@
 #define ENV_VIDEO_ADAPTER_MCGA          8
 #define ENV_VIDEO_ADAPTER_VGA           9
 #define ENV_VIDEO_ADAPTER_SVGA          10
-
-/**
-* MDA/HGA and CGA 6845 CRT Controller port numbers.
-*/
-typedef enum {
-    ENV_CRTC_PORT_MDA = 0x03B4,
-    ENV_CRTC_PORT_HGA = 0x03B4,
-    ENV_CRTC_PORT_CGA = 0x03D4
-} env_crtc_port_t;
 
 extern const char ENV_VIDEO_ADAPTER_NAMES[11][32];
 

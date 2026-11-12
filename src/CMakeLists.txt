@@ -53,7 +53,7 @@ configure_file(
 )
 
 # Build mode selection
-set(MAKE_LIB ON)
+# set(MAKE_LIB ON)
 
 if(MAKE_LIB)
     # ENV.LIB from library code; TEST.exe gets ENV code only via the lib

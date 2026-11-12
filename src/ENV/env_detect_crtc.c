@@ -4,7 +4,7 @@
 */
 #include "env_detect_crtc.h"
 
-int env_detect_crtc(unsigned short port_number) {
+int env_detect_crt(env_crtc_port_t port_number) {
     __asm {
         .8086
         pushf
