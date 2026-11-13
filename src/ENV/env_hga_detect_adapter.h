@@ -1,5 +1,5 @@
-#ifndef HGA_DETECT_ADAPTER_H
-#define HGA_DETECT_ADAPTER_H
+#ifndef ENV_HGA_DETECT_ADAPTER_H
+#define ENV_HGA_DETECT_ADAPTER_H
 
 #include "env_graphics_types.h"
 

@@ -1,10 +1,5 @@
-/**
- * @author      Jeremy Simon Thornton
- * @copyright   2024 Jeremy Simon Thornton
- *
- */
-#ifndef EGA_DETECT_ADAPTER_H
-#define EGA_DETECT_ADAPTER_H
+#ifndef ENV_EGA_DETECT_ADAPTER_H
+#define ENV_EGA_DETECT_ADAPTER_H
 
 #include "env_graphics_types.h"
 

@@ -2,6 +2,7 @@
 
 #include "env_graphics_constants.h"
 #include "../include/BIOS/bios_video_services.h"
+#include "env_graphics_types.h"
 
 /**
 * @brief detect VGA by attempting to use a VGA specific Video Subsystem Configuration (EGA/VGA) function
@@ -14,7 +15,7 @@
 * on return: AL = 12h if a valid value was passed in AL ie VGA+
 *
 */
-int env_vga_detect_adapter() {
+env_video_adapter_t env_vga_detect_adapter() {
     return (bios_video_subsystem_configuration(BIOS_CPU_ACCESS_TO_VIDEO_RAM, 0, 0) == 0x12)
         ? ENV_VIDEO_ADAPTER_VGA
         : ENV_VIDEO_ADAPTER_UKNOWN;
