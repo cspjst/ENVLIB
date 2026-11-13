@@ -7,9 +7,11 @@
 #include "../ENV/env_video_mode.h"
 #include "../ENV/env_detect_crtc.h"
 #include "../ENV/env_graphics_types.h"
-#include "../ENV/env_cga_detect_adapter.h"
-#include "../ENV/env_hga_detect_adapter.h"
 #include "../ENV/env_mda_detect_adapter.h"
+#include "../ENV/env_hga_detect_adapter.h"
+#include "../ENV/env_cga_detect_adapter.h"
+
+#include "../ENV/env_vga_detect_adapter.h"
 
 #include "../include/BIOS/bios_version.h"
 #include "../include/BIOS/bios_keyboard_services.h"
@@ -290,12 +292,92 @@ void test_env_cga_detect_adapter() {
     printf("ENV CGA adapter detection tests passed\n\n");
 }
 
+
+
+/* INT 10h AX=1A00h: returns 1 if supported, *active = display combination code */
+static int vga_display_combination(unsigned char* active) {
+    unsigned char al_, bl_;
+    __asm {
+        push    bp
+        push    ds
+        mov     ax, 1A00h
+        int     10h
+        pop     ds
+        pop     bp
+        mov     al_, al
+        mov     bl_, bl
+    }
+    *active = bl_;
+    return al_ == 0x1A;
+}
+
+static const char* vga_dcc_name(unsigned char dcc) {
+    switch (dcc) {
+        case 0x00: return "no display";
+        case 0x01: return "MDA";
+        case 0x02: return "CGA";
+        case 0x04: return "EGA colour";
+        case 0x05: return "EGA mono";
+        case 0x06: return "PGA";
+        case 0x07: return "VGA mono";
+        case 0x08: return "VGA colour";
+        case 0x0A: return "MCGA digital colour";
+        case 0x0B: return "MCGA mono";
+        case 0x0C: return "MCGA analogue colour";
+        default:   return "unknown";
+    }
+}
+
+void test_env_vga_detect_adapter() {
+    env_video_adapter_t result;
+    unsigned char dcc = 0;
+    int vga_bios;
+    int i;
+
+    printf("Testing ENV VGA adapter detection...\n");
+
+    result   = env_vga_detect_adapter();
+    vga_bios = vga_display_combination(&dcc);
+
+    printf("env_vga_detect_adapter() = %d (%s)\n", (int)result,
+           result == ENV_VGA ? "VGA" : "not VGA");
+    printf("INT 10h 1Ah:               %s\n", vga_bios ? "supported" : "not supported");
+    if (vga_bios) printf("  active display: %02Xh %s\n", dcc, vga_dcc_name(dcc));
+
+    /* only two legitimate answers */
+    assert(result == ENV_VGA || result == ENV_UNKNOWN);
+
+    /* VGA via 12h/32h must agree with the 1Ah display code (07h mono, 08h colour) */
+    if (vga_bios) {
+        assert((result == ENV_VGA) == (dcc == 0x07 || dcc == 0x08));
+        printf("Agrees with INT 10h 1Ah display code: PASS\n");
+    } else {
+        assert(result != ENV_VGA);
+        printf("No 1Ah support, not VGA: PASS\n");
+    }
+
+    /* same answer every time */
+    for (i = 1; i < 8; ++i) {
+        assert(env_vga_detect_adapter() == result);
+    }
+    printf("Repeatable over 8 calls: PASS\n");
+
+    printf("Expected:\n");
+    printf("  MDA/HGA/CGA/EGA: not VGA\n");
+    printf("  VGA:             VGA (display code 07h or 08h)\n");
+    printf("  MCGA:            not VGA (display code 0Ah-0Ch)\n");
+
+    printf("ENV VGA adapter detection tests passed\n\n");
+}
+
 void test_env() {
     printf("Test ENVLIB...\n");
     assert(bios_version() == ENV_MIN_BIOS_VERSION);
     //test_env_video_mode();
     //test_env_detect_crtc();
-    //test_env_cga_detect_adapter();
+    //test_env_mda_detect_adapter();
     //test_env_hga_detect_adapter();
-    test_env_mda_detect_adapter();
+    //test_env_cga_detect_adapter();
+
+    test_env_vga_detect_adapter();
 }
