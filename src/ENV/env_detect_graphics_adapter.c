@@ -17,12 +17,12 @@
 #include "env_graphics_constants.h"
 
 int env_detect_monochrome_adapter() {
-	return hga_detect_adapter();   // NB detects MDA adapter too
+	return env_hga_detect_adapter();   // NB detects MDA adapter too
 }
 
 int env_detect_colour_adapter() {
-	if (vga_detect_adapter()) return ENV_VIDEO_ADAPTER_VGA;
-	if (ega_detect_adapter()) return ENV_VIDEO_ADAPTER_EGA;
-	if (cga_detect_adapter()) return ENV_VIDEO_ADAPTER_CGA;
+	if (env_vga_detect_adapter()) return ENV_VIDEO_ADAPTER_VGA;
+	if (env_ega_detect_adapter()) return ENV_VIDEO_ADAPTER_EGA;
+	if (env_cga_detect_adapter()) return ENV_VIDEO_ADAPTER_CGA;
 	return ENV_VIDEO_ADAPTER_UKNOWN;;
 }

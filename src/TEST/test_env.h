@@ -3,6 +3,7 @@
 
 void test_env_video_mode();
 void test_env_detect_crtc();
+void test_env_cga_detect_adapter();
 
 void test_env();
 

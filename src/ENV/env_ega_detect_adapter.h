@@ -6,6 +6,6 @@
 #ifndef EGA_DETECT_ADAPTER_H
 #define EGA_DETECT_ADAPTER_H
 
-int ega_detect_adapter();
+int env_ega_detect_adapter();
 
 #endif

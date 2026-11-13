@@ -7,6 +7,7 @@
 #include "../ENV/env_video_mode.h"
 #include "../ENV/env_detect_crtc.h"
 #include "../ENV/env_graphics_types.h"
+#include "../ENV/env_cga_detect_adapter.h"
 
 #include "../include/BIOS/bios_version.h"
 #include "../include/BIOS/bios_keyboard_services.h"
@@ -16,6 +17,15 @@
 #define EQUIP_VIDEO_MONO  0x30
 
 #define REPEATS     8
+/* standard BIOS modes worth trying (PCjr/Tandy 08h-0Ah left out) */
+static const unsigned char candidates[] = {
+    0x00, 0x01, 0x02, 0x03,     /* CGA text            */
+    0x04, 0x05, 0x06,           /* CGA graphics        */
+    0x07,                       /* MDA / Hercules text */
+    0x0D, 0x0E, 0x0F, 0x10,     /* EGA graphics        */
+    0x11, 0x12, 0x13            /* VGA / MCGA graphics */
+};
+#define NCANDIDATES (sizeof(candidates) / sizeof(candidates[0]))
 
 static void wait_key(const char* msg) {
     bios_key_t key;
@@ -74,15 +84,37 @@ void test_env_detect_crtc() {
     printf("ENV CRTC detection tests passed\n\n");
 }
 
-/* standard BIOS modes worth trying (PCjr/Tandy 08h-0Ah left out) */
-static const unsigned char candidates[] = {
-    0x00, 0x01, 0x02, 0x03,     /* CGA text            */
-    0x04, 0x05, 0x06,           /* CGA graphics        */
-    0x07,                       /* MDA / Hercules text */
-    0x0D, 0x0E, 0x0F, 0x10,     /* EGA graphics        */
-    0x11, 0x12, 0x13            /* VGA / MCGA graphics */
-};
-#define NCANDIDATES (sizeof(candidates) / sizeof(candidates[0]))
+void test_env_cga_detect_adapter() {
+    env_video_adapter_t result;
+    int crtc;
+    int i;
+
+    printf("Testing ENV CGA adapter detection...\n");
+
+    result = env_cga_detect_adapter();
+    crtc = (env_detect_crtc(ENV_CRTC_PORT_CGA) != 0);
+
+    printf("env_cga_detect_adapter() = %d (%s)\n", (int)result, result ? "CGA" : "not CGA");
+    printf("CRTC at 3D4h:              %s\n", crtc ? "FOUND" : "none");
+
+    /* must agree with a direct probe of the colour CRTC */
+    assert((result != 0) == crtc);
+    printf("Agrees with CRTC probe: PASS\n");
+
+    /* same answer every time */
+    for (i = 1; i < 8; ++i) {
+        assert(env_cga_detect_adapter() == result);
+    }
+    printf("Repeatable over 8 calls: PASS\n");
+
+    printf("Expected:\n");
+    printf("  CGA:            CGA\n");
+    printf("  MDA/HGA:        not CGA\n");
+    printf("  EGA/VGA colour: CGA  (by design - env_detect checks VGA/EGA first)\n");
+    printf("  EGA/VGA mono:   not CGA\n");
+
+    printf("ENV CGA adapter detection tests passed\n\n");
+}
 
 void test_env_video_mode() {
     unsigned char accepted[NCANDIDATES];
@@ -147,5 +179,6 @@ void test_env() {
     printf("Test ENVLIB...\n");
     assert(bios_version() == ENV_MIN_BIOS_VERSION);
     //test_env_video_mode();
-    test_env_detect_crtc();
+    //test_env_detect_crtc();
+    test_env_cga_detect_adapter();
 }

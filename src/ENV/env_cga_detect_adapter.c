@@ -1,4 +1,5 @@
 #include "env_cga_detect_adapter.h"
+
 #include "env_graphics_constants.h"
 #include "env_detect_crtc.h"
 

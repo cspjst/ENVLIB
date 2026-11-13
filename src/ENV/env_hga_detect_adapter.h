@@ -32,6 +32,6 @@
 * 4 Hercules InColor
 * 5 Hercules Clone
 */
-int hga_detect_adapter();
+int env_hga_detect_adapter();
 
 #endif

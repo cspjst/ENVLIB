@@ -27,7 +27,7 @@
 *
 * @note If upon return from this call, BL>3, then must be running on a CGA or MDA(HGA) - not an EGA or VGA.
 */
-int ega_detect_adapter() {
+int env_ega_detect_adapter() {
         bios_video_subsystem_config_t info;
         bios_return_video_configuration_information(&info);
         return (info.ega_memory < 4) ? ENV_VIDEO_ADAPTER_EGA : ENV_VIDEO_ADAPTER_UKNOWN;

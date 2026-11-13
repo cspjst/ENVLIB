@@ -6,6 +6,6 @@
 #ifndef VGA_DETECT_ADAPTER_H
 #define VGA_DETECT_ADAPTER_H
 
-int vga_detect_adapter();
+int env_vga_detect_adapter();
 
 #endif

@@ -1,8 +1,11 @@
-#ifndef ENV_GRAPHICS_TYPES
-#define ENV_GRAPHICS_TYPES
+#ifndef ENV_GRAPHICS_TYPES_H
+#define ENV_GRAPHICS_TYPES_H
 
+/**
+ * matching the __asm defines in constants file
+ */
 typedef enum {
-    ENV_UNKOWN,
+    ENV_UNKNOWN,
     ENV_MDA,
     ENV_HGA,
     ENV_HGA_PLUS,

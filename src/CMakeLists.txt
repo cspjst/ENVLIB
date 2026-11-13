@@ -61,8 +61,8 @@ if(MAKE_LIB)
     set_target_properties(ENVLIB PROPERTIES OUTPUT_NAME ENV)
     add_executable(TEST ${TEST_SOURCES})
     target_link_libraries(TEST PRIVATE ENVLIB ${BIOS_LIB})
-else()
-    # Everything compiled straight into TEST.exe
-    add_executable(TEST ${TEST_SOURCES} ${ENV_SOURCES})
-    target_link_libraries(TEST PRIVATE ENVLIB ${BIOS_LIB})
-endif()
+  else()
+      # Everything compiled straight into TEST.exe
+      add_executable(TEST ${TEST_SOURCES} ${ENV_SOURCES})
+      target_link_libraries(TEST PRIVATE ${BIOS_LIB})
+  endif()
