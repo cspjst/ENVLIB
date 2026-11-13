@@ -1,10 +1,7 @@
-/**
- * @author      Jeremy Simon Thornton
- * @copyright   2024 Jeremy Simon Thornton
- *
- */
 #ifndef HGA_DETECT_ADAPTER_H
 #define HGA_DETECT_ADAPTER_H
+
+#include "env_graphics_types.h"
 
 /**
 * If an MDA card is detected, however, you can also distinguish between an MDA card and the Hercules cards.
@@ -32,6 +29,6 @@
 * 4 Hercules InColor
 * 5 Hercules Clone
 */
-int env_hga_detect_adapter();
+env_video_adapter_t env_hga_detect_adapter();
 
 #endif

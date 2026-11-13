@@ -3,7 +3,7 @@
 #include "env_detect_crtc.h"
 #include "env_graphics_constants.h"
 
-int env_mda_detect_adapter() {
+env_video_adapter_t env_mda_detect_adapter() {
     int adapter = ENV_VIDEO_ADAPTER_UKNOWN;
     if (env_detect_crtc(ENV_CRTC_PORT_MDA)) {
         __asm {

@@ -8,6 +8,8 @@
 #include "../ENV/env_detect_crtc.h"
 #include "../ENV/env_graphics_types.h"
 #include "../ENV/env_cga_detect_adapter.h"
+#include "../ENV/env_hga_detect_adapter.h"
+#include "../ENV/env_mda_detect_adapter.h"
 
 #include "../include/BIOS/bios_version.h"
 #include "../include/BIOS/bios_keyboard_services.h"
@@ -41,6 +43,76 @@ static int repeatable(unsigned short port) {
         if ((env_detect_crtc(port) != 0) != first) return 0;
     }
     return 1;
+}
+
+static unsigned char hga_read_status() {
+    unsigned char v;
+    __asm {
+        mov dx, 0x3BA
+        in  al, dx
+        mov v, al
+    }
+    return v;
+}
+
+/* count bit-7 (vsync) changes on 3BAh over n reads: 0 = MDA, >0 = Hercules */
+static unsigned hga_vsync_toggles(unsigned n) {
+    unsigned toggles = 0;
+    unsigned char last = hga_read_status() & 0x80;
+    unsigned i;
+    for (i = 0; i < n; ++i) {
+        unsigned char now = hga_read_status() & 0x80;
+        if (now != last) { ++toggles; last = now; }
+    }
+    return toggles;
+}
+
+void test_env_hga_detect_adapter() {
+    static const char* names[] = {
+        "unknown", "MDA", "Hercules", "Hercules Plus", "Hercules InColor", "Hercules clone"
+    };
+    env_video_adapter_t result;
+    int is_hga;
+    int mono_crtc;
+    unsigned toggles;
+    int i;
+
+    printf("Testing ENV HGA adapter detection...\n");
+
+    result = env_hga_detect_adapter();
+    is_hga = (result >= ENV_HGA && result <= ENV_HGA_CLONE);
+    printf("env_hga_detect_adapter() = %d (%s)\n", (int)result,
+           (result >= ENV_UNKNOWN && result <= ENV_HGA_CLONE) ? names[result] : "OUT OF RANGE");
+
+    /* only unknown or one of the Hercules family */
+    assert(result == ENV_UNKNOWN || is_hga);
+
+    /* a Hercules answer needs a CRTC at the mono port */
+    mono_crtc = (env_detect_crtc(ENV_CRTC_PORT_HGA) != 0);
+    printf("CRTC at 3B4h: %s\n", mono_crtc ? "FOUND" : "none");
+    if (is_hga) assert(mono_crtc);
+
+    /* independent vsync check, only meaningful with a mono CRTC present */
+    if (mono_crtc) {
+        toggles = hga_vsync_toggles(32768U);
+        printf("Vsync toggles on 3BAh: %u -> %s\n", toggles, toggles ? "Hercules" : "MDA");
+        if (is_hga) assert(toggles > 0);    /* Hercules must show vsync */
+        else        assert(toggles == 0);   /* MDA must not             */
+        printf("Agrees with vsync sampling: PASS\n");
+    }
+
+    /* same answer every time */
+    for (i = 1; i < 4; ++i) {
+        assert(env_hga_detect_adapter() == result);
+    }
+    printf("Repeatable over 4 calls: PASS\n");
+
+    printf("Expected:\n");
+    printf("  MDA:                unknown\n");
+    printf("  Hercules:           Hercules / Plus / InColor / clone per card ID\n");
+    printf("  CGA/EGA/VGA colour: unknown\n");
+
+    printf("ENV HGA adapter detection tests passed\n\n");
 }
 
 void test_env_detect_crtc() {
@@ -175,10 +247,51 @@ void test_env_video_mode() {
     printf("ENV video mode tests passed\n\n");
 }
 
+void test_env_mda_detect_adapter() {
+    env_video_adapter_t result;
+    int crtc;
+    unsigned toggles = 0;
+    int i;
+
+    printf("Testing ENV MDA adapter detection...\n");
+
+    result = env_mda_detect_adapter();
+    crtc = (env_detect_crtc(ENV_CRTC_PORT_MDA) != 0);
+    if (crtc) toggles = hga_vsync_toggles(32768U);
+
+    printf("env_mda_detect_adapter() = %d (%s)\n", (int)result,
+           result == ENV_MDA ? "MDA" : "not MDA");
+    printf("CRTC at 3B4h:              %s\n", crtc ? "FOUND" : "none");
+    if (crtc) printf("Vsync toggles on 3BAh:     %u\n", toggles);
+
+    /* only two legitimate answers */
+    assert(result == ENV_MDA || result == ENV_UNKNOWN);
+
+    /* MDA = mono CRTC present AND no vsync (Hercules toggles bit 7) */
+    assert((result == ENV_MDA) == (crtc && toggles == 0));
+    printf("Agrees with CRTC probe + vsync sampling: PASS\n");
+
+    /* same answer every time */
+    for (i = 1; i < 4; ++i) {
+        assert(env_mda_detect_adapter() == result);
+    }
+    printf("Repeatable over 4 calls: PASS\n");
+
+    printf("Expected:\n");
+    printf("  MDA:            MDA\n");
+    printf("  Hercules (any): not MDA\n");
+    printf("  EGA/VGA mono:   depends on vsync on 3BAh\n");
+    printf("  CGA / colour:   not MDA\n");
+
+    printf("ENV MDA adapter detection tests passed\n\n");
+}
+
 void test_env() {
     printf("Test ENVLIB...\n");
     assert(bios_version() == ENV_MIN_BIOS_VERSION);
     //test_env_video_mode();
     //test_env_detect_crtc();
-    test_env_cga_detect_adapter();
+    //test_env_cga_detect_adapter();
+    //test_env_hga_detect_adapter();
+    test_env_mda_detect_adapter();
 }

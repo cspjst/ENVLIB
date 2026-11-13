@@ -6,6 +6,8 @@
 #ifndef EGA_DETECT_ADAPTER_H
 #define EGA_DETECT_ADAPTER_H
 
-int env_ega_detect_adapter();
+#include "env_graphics_types.h"
+
+env_video_adapter_t env_ega_detect_adapter();
 
 #endif

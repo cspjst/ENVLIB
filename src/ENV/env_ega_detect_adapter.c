@@ -7,6 +7,7 @@
 
 #include "env_graphics_constants.h"
 #include "../include/BIOS/bios_video_services.h"
+#include "env_graphics_types.h"
 
 /**
 * @brief detect EGA by attempting to use an EGA specific Video Subsystem Configuration (EGA/VGA) function
@@ -27,7 +28,7 @@
 *
 * @note If upon return from this call, BL>3, then must be running on a CGA or MDA(HGA) - not an EGA or VGA.
 */
-int env_ega_detect_adapter() {
+env_video_adapter_t env_ega_detect_adapter() {
         bios_video_subsystem_config_t info;
         bios_return_video_configuration_information(&info);
         return (info.ega_memory < 4) ? ENV_VIDEO_ADAPTER_EGA : ENV_VIDEO_ADAPTER_UKNOWN;
