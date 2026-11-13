@@ -10,8 +10,9 @@
 #include "../ENV/env_mda_detect_adapter.h"
 #include "../ENV/env_hga_detect_adapter.h"
 #include "../ENV/env_cga_detect_adapter.h"
-
+#include "../ENV/env_ega_detect_adapter.h"
 #include "../ENV/env_vga_detect_adapter.h"
+#include "../ENV/env_detect_graphics_adapter.h"
 
 #include "../include/BIOS/bios_version.h"
 #include "../include/BIOS/bios_keyboard_services.h"
@@ -292,8 +293,6 @@ void test_env_cga_detect_adapter() {
     printf("ENV CGA adapter detection tests passed\n\n");
 }
 
-
-
 /* INT 10h AX=1A00h: returns 1 if supported, *active = display combination code */
 static int vga_display_combination(unsigned char* active) {
     unsigned char al_, bl_;
@@ -370,6 +369,145 @@ void test_env_vga_detect_adapter() {
     printf("ENV VGA adapter detection tests passed\n\n");
 }
 
+/* INT 10h AH=12h BL=10h: BL unchanged (10h) = no EGA-class BIOS */
+static int ega_bios_info(unsigned char* mono, unsigned char* mem, unsigned char* sw) {
+    unsigned char bh_, bl_, cl_;
+    __asm {
+        push    bp
+        push    ds
+        mov     ah, 12h
+        mov     bl, 10h
+        int     10h
+        pop     ds
+        pop     bp
+        mov     bh_, bh
+        mov     bl_, bl
+        mov     cl_, cl
+    }
+    *mono = bh_;
+    *mem  = bl_;
+    *sw   = cl_;
+    return bl_ != 0x10;
+}
+
+void test_env_ega_detect_adapter() {
+    static const char* ega_mem[] = { "64K", "128K", "192K", "256K" };
+    env_video_adapter_t result;
+    unsigned char mono = 0, mem = 0, sw = 0, dcc = 0;
+    int ega_bios;
+    int vga_bios;
+    int i;
+
+    printf("Testing ENV EGA adapter detection...\n");
+
+    result   = env_ega_detect_adapter();
+    ega_bios = ega_bios_info(&mono, &mem, &sw);
+    vga_bios = vga_display_combination(&dcc);
+
+    printf("env_ega_detect_adapter() = %d (%s)\n", (int)result,
+           result == ENV_EGA ? "EGA" : "not EGA");
+    printf("INT 10h 12h/10h:           %s\n", ega_bios ? "EGA-class BIOS" : "no EGA BIOS");
+    if (ega_bios) {
+        printf("  display %s, memory %s, switches %02Xh\n",
+               mono ? "mono" : "colour", mem <= 3 ? ega_mem[mem] : "?", sw);
+    }
+    printf("INT 10h 1Ah:               %s", vga_bios ? "supported" : "not supported");
+    if (vga_bios) printf(" - %02Xh %s", dcc, vga_dcc_name(dcc));
+    printf("\n");
+
+    /* only two legitimate answers */
+    assert(result == ENV_EGA || result == ENV_UNKNOWN);
+
+    /* an EGA answer needs an EGA-class BIOS */
+    if (result == ENV_EGA) assert(ega_bios);
+    printf("Consistent with INT 10h 12h/10h: PASS\n");
+
+    /* same answer every time */
+    for (i = 1; i < 8; ++i) {
+        assert(env_ega_detect_adapter() == result);
+    }
+    printf("Repeatable over 8 calls: PASS\n");
+
+    printf("Expected:\n");
+    printf("  MDA/HGA/CGA: not EGA\n");
+    printf("  EGA:         EGA (no 1Ah support)\n");
+    printf("  VGA/MCGA:    answer 12h too - EGA unless detector excludes them\n");
+
+    printf("ENV EGA adapter detection tests passed\n\n");
+}
+
+void test_env_detect_graphics_adapter() {
+    static const char* names[] = {
+        "unknown", "MDA", "Hercules", "Hercules Plus", "Hercules InColor",
+        "Hercules clone", "CGA", "EGA", "MCGA", "VGA", "SVGA"
+    };
+    unsigned short equip = *(unsigned short far*)0x00400010L;
+    int bios_mono = ((equip & 0x30) == 0x30);
+    int mono, colour;
+    int mono_crtc, colour_crtc;
+    unsigned char ega_mono = 0, ega_mem = 0, ega_sw = 0, dcc = 0;
+    int ega_bios, vga_bios;
+    env_video_adapter_t vga, hga;
+    int i;
+
+    printf("Testing ENV graphics adapter dispatch...\n");
+
+    mono   = env_detect_monochrome_adapter();
+    colour = env_detect_colour_adapter();
+    printf("Monochrome adapter: %d (%s)\n", mono,   (mono   >= 0 && mono   <= 10) ? names[mono]   : "OUT OF RANGE");
+    printf("Colour adapter:     %d (%s)\n", colour, (colour >= 0 && colour <= 10) ? names[colour] : "OUT OF RANGE");
+
+    /* each side only reports adapters that belong on that side */
+    assert(mono == ENV_UNKNOWN || mono == ENV_MDA ||
+           (mono >= ENV_HGA && mono <= ENV_HGA_CLONE) ||
+           mono == ENV_EGA || mono == ENV_VGA);
+    assert(colour == ENV_UNKNOWN || colour == ENV_CGA || colour == ENV_EGA ||
+           colour == ENV_MCGA || colour == ENV_VGA || colour == ENV_SVGA);
+    printf("Values valid for each side: PASS\n");
+
+    /* a detected adapter needs a CRTC at its port */
+    mono_crtc   = (env_detect_crtc(ENV_CRTC_PORT_MDA) != 0);
+    colour_crtc = (env_detect_crtc(ENV_CRTC_PORT_CGA) != 0);
+    if (mono   != ENV_UNKNOWN) assert(mono_crtc);
+    if (colour != ENV_UNKNOWN) assert(colour_crtc);
+    printf("Consistent with CRTC probes: PASS\n");
+
+    /* the display the BIOS booted on must be found */
+    if (bios_mono) assert(mono != ENV_UNKNOWN);
+    else           assert(colour != ENV_UNKNOWN);
+    printf("Active (BIOS) display detected: PASS\n");
+
+    /* ordering: the most capable adapter must win on each side */
+    vga      = env_vga_detect_adapter();
+    hga      = env_hga_detect_adapter();
+    ega_bios = ega_bios_info(&ega_mono, &ega_mem, &ega_sw);
+    vga_bios = vga_display_combination(&dcc);
+
+    if (vga == ENV_VGA && vga_bios && dcc == 0x08) assert(colour == ENV_VGA);
+    if (vga == ENV_VGA && vga_bios && dcc == 0x07) assert(mono   == ENV_VGA);
+    if (vga != ENV_VGA && ega_bios && !ega_mono)   assert(colour == ENV_EGA);
+    if (vga != ENV_VGA && ega_bios &&  ega_mono)   assert(mono   == ENV_EGA);
+    if (hga >= ENV_HGA && hga <= ENV_HGA_CLONE)    assert(mono   == hga);
+    printf("Most capable adapter wins (VGA > EGA > CGA, HGA > MDA): PASS\n");
+
+    /* same answers every time */
+    for (i = 1; i < 4; ++i) {
+        assert(env_detect_monochrome_adapter() == mono);
+        assert(env_detect_colour_adapter()     == colour);
+    }
+    printf("Repeatable over 4 calls: PASS\n");
+
+    printf("Expected (mono / colour):\n");
+    printf("  MDA:           MDA      / unknown\n");
+    printf("  Hercules:      Hercules / unknown\n");
+    printf("  CGA:           unknown  / CGA\n");
+    printf("  EGA colour:    unknown  / EGA\n");
+    printf("  VGA colour:    unknown  / VGA\n");
+    printf("  MDA + CGA:     MDA      / CGA  (dual head)\n");
+
+    printf("ENV graphics adapter dispatch tests passed\n\n");
+}
+
 void test_env() {
     printf("Test ENVLIB...\n");
     assert(bios_version() == ENV_MIN_BIOS_VERSION);
@@ -378,6 +516,7 @@ void test_env() {
     //test_env_mda_detect_adapter();
     //test_env_hga_detect_adapter();
     //test_env_cga_detect_adapter();
-
-    test_env_vga_detect_adapter();
+    //test_env_ega_detect_adapter();
+    //test_env_vga_detect_adapter();
+    test_env_detect_graphics_adapter();
 }
